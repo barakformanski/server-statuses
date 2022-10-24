@@ -142,6 +142,7 @@ router.delete("/deletetransition/:id", async (req, res) => {
 router.delete("/deleteAll", async (req, res) => {
   try {
     await statusModel.deleteMany({});
+    await transitionModel.deleteMany({});
     res.send("Delete all data");
   } catch (error) {
     res.status(400).json({ message: error.message });
