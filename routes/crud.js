@@ -2,22 +2,17 @@ const express = require("express");
 const router = express.Router();
 const statusModel = require("../models/statusModel");
 const transitionModel = require("../models/transitionModel");
-// const Data = require("../models/statusModel");
 const axios = require("axios");
-const auth = require("../middleware/auth");
 
 //Post Method
-// router.post("/addStatus", async (req, res) => {
 router.post("/add/:field", async (req, res) => {
   console.log(req.params.field);
   let type = req.params.field;
 
   let data;
   if (type === "status") {
-    // data = new Data({
     data = new statusModel({
       title: req.body.title,
-      // description: req.body.description,
     });
   } else if (type === "transition") {
     data = new transitionModel({
@@ -32,7 +27,6 @@ router.post("/add/:field", async (req, res) => {
   } else if (type === "transition") {
     isExist = await transitionModel.findOne({ title: req.body.title });
   }
-  // const isExist = await statusModel.findOne({ title: req.body.title });
   if (isExist) {
     res.status(400).json({ message: `${type} already exsit!` });
   } else {
@@ -108,7 +102,6 @@ router.patch("/update/:id", async (req, res) => {
     }
 
     res.send(result);
-    // updatePreviosINIT(result._id);
   } catch (error) {
     console.log(error);
     res.status(400).json({ message: error.message });
