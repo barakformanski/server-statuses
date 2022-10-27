@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const statusSchema = new mongoose.Schema({
   title: String,
-  description: String | undefined,
+  initial: Boolean,
 });
 
 module.exports = mongoose.model("statuses", statusSchema);

@@ -6,7 +6,6 @@ const axios = require("axios");
 
 //Post Method
 router.post("/add/:field", async (req, res) => {
-  console.log(req.params.field);
   let type = req.params.field;
 
   let data;
@@ -15,10 +14,12 @@ router.post("/add/:field", async (req, res) => {
       title: req.body.title,
     });
   } else if (type === "transition") {
+    let from = await statusModel.findOne({ title: req.body.from })._id;
+    let to = await statusModel.findOne({ title: req.body.to })._id;
     data = new transitionModel({
       title: req.body.title,
-      from: req.body.from,
-      to: req.body.to,
+      from: from,
+      to: to,
     });
   }
   let isExist;
@@ -51,7 +52,7 @@ router.get("/getAllStatuses", async (req, res) => {
 });
 router.get("/getAllTransitions", async (req, res) => {
   try {
-    const data = await transitionModel.find();
+    const data = await transitionModel.find().populate(["from", "to"]);
     console.log(data);
     res.json(data);
   } catch (error) {
@@ -90,9 +91,9 @@ router.patch("/update/:id", async (req, res) => {
     );
 
     try {
-      const result = await statusModel.updateOne(
-        { description: "INIT", _id: { $ne: id } },
-        { $set: { description: null } }
+      const updateManyresult = await statusModel.updateMany(
+        { _id: { $ne: id } },
+        { $set: { initial: false } }
       );
 
       // res.send(result);
