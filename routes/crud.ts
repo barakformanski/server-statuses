@@ -9,18 +9,23 @@ router.post("/add/:field", async (req, res) => {
   let type = req.params.field;
 
   let data;
+  let from;
+  let to;
   if (type === "status") {
     data = new statusModel({
       title: req.body.title,
     });
   } else if (type === "transition") {
-    let from = await statusModel.findOne({ title: req.body.from })._id;
-    let to = await statusModel.findOne({ title: req.body.to })._id;
+    from = await statusModel.findOne({ title: req.body.from });
+    to = await statusModel.findOne({ title: req.body.to });
     data = new transitionModel({
       title: req.body.title,
-      from: from,
-      to: to,
+      from: from._id,
+      to: to._id,
     });
+    console.log("from", from);
+    console.log("to", to);
+    console.log("DATA", data);
   }
   let isExist;
   if (type === "status") {
@@ -33,6 +38,11 @@ router.post("/add/:field", async (req, res) => {
   } else {
     try {
       const dataToSave = await data.save();
+      const updateStatusData = {
+        from: from,
+        to: to,
+      };
+      await updateStatusAfterAddingTranstion(updateStatusData);
       res.status(200).json(dataToSave);
     } catch (error) {
       res.status(400).json({ message: error.message });
@@ -78,7 +88,7 @@ router.get("/getOne/:id", async (req, res) => {
 });
 
 //Update by ID Method
-router.patch("/update/:id", async (req, res) => {
+router.patch("/updateInitial/:id", async (req, res) => {
   try {
     const id = req.params.id.trim();
     const updatedData = req.body;
@@ -89,18 +99,48 @@ router.patch("/update/:id", async (req, res) => {
       updatedData,
       options
     );
+    updateInitalOnAllOthers(id);
+    // try {
+    //   const updateManyresult = await statusModel.updateMany(
+    //     { _id: { $ne: id } },
+    //     { $set: { initial: false } }
+    //   );
 
-    try {
-      const updateManyresult = await statusModel.updateMany(
-        { _id: { $ne: id } },
-        { $set: { initial: false } }
-      );
+    //   // res.send(result);
+    // } catch (error) {
+    //   console.log("error", error);
+    //   res.status(400).json({ message: error.message });
+    // }
 
-      // res.send(result);
-    } catch (error) {
-      console.log("error", error);
-      res.status(400).json({ message: error.message });
-    }
+    res.send(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({ message: error.message });
+  }
+});
+router.patch("/updateStatusReacable", async (req, res) => {
+  try {
+    const id = req.params.id.trim();
+    const updatedData = req.body;
+    const options = { new: true };
+
+    const result = await statusModel.findByIdAndUpdate(
+      id,
+      updatedData,
+      options
+    );
+    updateInitalOnAllOthers(id);
+    // try {
+    //   const updateManyresult = await statusModel.updateMany(
+    //     { _id: { $ne: id } },
+    //     { $set: { initial: false } }
+    //   );
+
+    //   // res.send(result);
+    // } catch (error) {
+    //   console.log("error", error);
+    //   res.status(400).json({ message: error.message });
+    // }
 
     res.send(result);
   } catch (error) {
@@ -109,6 +149,33 @@ router.patch("/update/:id", async (req, res) => {
   }
 });
 
+const updateInitalOnAllOthers = async (id) => {
+  try {
+    const updateManyresult = await statusModel.updateMany(
+      { _id: { $ne: id } },
+      { $set: { initial: false } }
+    );
+
+    // res.send(result);
+  } catch (error) {
+    console.log("error", error);
+  }
+};
+const updateStatusAfterAddingTranstion = async (updatedData) => {
+  const options = { new: true };
+
+  try {
+    const result = await statusModel.findByIdAndUpdate(
+      updatedData.from,
+      updatedData.to,
+      options
+    );
+
+    // res.send(result);
+  } catch (error) {
+    console.log("error", error);
+  }
+};
 //Delete by ID Method
 router.delete("/delete/:id", async (req, res) => {
   console.log(req.params.id);
